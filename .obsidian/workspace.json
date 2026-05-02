@@ -53,10 +53,14 @@
             "id": "6f20660050c568eb",
             "type": "leaf",
             "state": {
-              "type": "graph",
-              "state": {},
-              "icon": "lucide-git-fork",
-              "title": "Graph view"
+              "type": "markdown",
+              "state": {
+                "file": "Foray — Роадмап.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "Foray — Роадмап"
             }
           },
           {
@@ -74,7 +78,7 @@
             }
           }
         ],
-        "currentTab": 2
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -239,14 +243,14 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "9887a6af79d90a9d",
+  "active": "6f20660050c568eb",
   "lastOpenFiles": [
+    "Foray — Обзор.md",
     "Подписки и Платежи.md",
     "Словарь.md",
     "Foray — Роадмап.md",
     "Foray — Технический стек.md",
     "Foray — Аутентификация.md",
-    "Foray — Обзор.md",
     "API Эндпоинты.md",
     "Gateway Сервис.md",
     "Жизненный цикл сессии.md",
