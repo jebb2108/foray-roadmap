@@ -12,17 +12,16 @@ tags: [api, reference, existing-system]
 
 ## `/api/user` — Пользователи
 
-| Метод | Путь | Параметры | Описание |
-|-------|------|-----------|----------|
-| GET | `/api/user/check_user` | `?user_id=` | Существует ли пользователь в Gateway |
-| GET | `/api/user/check_profile` | `?user_id=` | Профиль + статус верификации email |
-| GET | `/api/user/check_nickname` | `?nickname=` | Уникальность никнейма |
-| GET | `/api/user/check_email` | `?email=` | Доступность email |
-| PUT | `/api/user/register` | body: профиль | Сохранить профиль в Gateway |
-| GET | `/api/user/verify` | `?token=` | Ссылка подтверждения email → возвращает HTML |
-| GET | `/api/user/partner_info` | `?match_id=` | Профиль партнёра по match_id |
-| POST | `/api/user/send_email` | body: `{user_id, email}` | Отправить письмо подтверждения через Resend |
-| GET | `/api/user/create_token` | `?user_id=&match_id=&room_id=` | Выдать JWT для чат-сессии |
+| Метод | Путь                       | Параметры                      | Описание                                     |
+| ----- | -------------------------- | ------------------------------ | -------------------------------------------- |
+| GET   | `/api/user/check_user`     | `?user_id=`                    | Существует ли пользователь в Gateway         |
+| GET   | `/api/user/check_nickname` | `?nickname=`                   | Уникальность никнейма                        |
+| GET   | `/api/user/check_email`    | `?email=`                      | Доступность email                            |
+| PUT   | `/api/user/register`       | body: профиль                  | Сохранить профиль в Gateway                  |
+| GET   | `/api/user/verify`         | `?token=`                      | Ссылка подтверждения email → возвращает HTML |
+| GET   | `/api/user/partner_info`   | `?match_id=`                   | Профиль партнёра по match_id                 |
+| POST  | `/api/user/send_email`     | body: `{user_id, email}`       | Отправить письмо подтверждения через Resend  |
+| GET   | `/api/user/create_token`   | `?user_id=&match_id=&room_id=` | Выдать JWT для чат-сессии                    |
 
 ---
 
