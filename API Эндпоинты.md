@@ -4,7 +4,7 @@ tags: [api, reference, existing-system]
 
 # API Эндпоинты
 
-← [[🗺️ Foray — Карта проекта (Обновлено)]]
+← [[🗺️ Foray — Карта проекта]]
 
 Справочник эндпоинтов `web-app-service`. Для эндпоинтов самого [[Gateway Сервис|Gateway]] — см. отдельную заметку.
 

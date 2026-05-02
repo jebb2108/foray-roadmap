@@ -4,7 +4,7 @@ tags: [websocket, chat, realtime, existing-system, core-feature]
 
 # WebSocket Чат
 
-← [[🗺️ Foray — Карта проекта (Обновлено)]] | Связан: [[Жизненный цикл сессии]]
+← [[🗺️ Foray — Карта проекта]] | Связан: [[Жизненный цикл сессии]]
 
 ## Подключение
 

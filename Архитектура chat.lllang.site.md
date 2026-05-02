@@ -4,7 +4,7 @@ tags: [architecture, existing-system, reference]
 
 # Архитектура chat.lllang.site
 
-← [[🗺️ Foray — Карта проекта (Обновлено)]]
+← [[🗺️ Foray — Карта проекта]]
 
 ## Обзор
 

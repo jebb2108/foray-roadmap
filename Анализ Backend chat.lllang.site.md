@@ -4,7 +4,7 @@ tags: [backend, analysis, existing-system, architecture]
 
 # Анализ Backend chat.lllang.site
 
-← [[🗺️ Foray — Карта проекта (Обновлено)]]
+← [[🗺️ Foray — Карта проекта]]
 
 ## Текущая архитектура
 
