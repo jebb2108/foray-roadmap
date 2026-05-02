@@ -4,7 +4,7 @@ tags: [foray, auth, mobile, new-app]
 
 # Foray — Аутентификация
 
-← [[🗺️ Foray — Карта проекта]]
+← [[🗺️ Foray — Карта проекта (Обновлено)]]
 
 ## Схема: Email + Access/Refresh JWT
 

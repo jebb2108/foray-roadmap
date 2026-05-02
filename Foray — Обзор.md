@@ -4,7 +4,7 @@ tags: [foray, new-app, overview, mobile]
 
 # Foray — Обзор
 
-← [[🗺️ Foray — Карта проекта]]
+← [[🗺️ Foray — Карта проекта (Обновлено)]]
 
 ## Что такое Foray
 
