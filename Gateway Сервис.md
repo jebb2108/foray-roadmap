@@ -32,10 +32,9 @@ http://217.149.29.173:1000
 | `/api` | Пользователи, профили, история |
 | `/api/worker` | Матчмейкинг, очередь, сессии |
 | `/api/payments` | Подписки, YooKassa |
-| `/api/dict` | Словарь |
-| `/api/ai` | AI функции (объявлен, не используется в web-app) |
+| `/api/ai` | AI функции |
 
-## Ключевые Gateway эндпоинты (используемые web-app)
+## Ключевые Gateway эндпоинты
 
 | Путь | Назначение |
 |------|------------|
@@ -46,7 +45,6 @@ http://217.149.29.173:1000
 | `POST /api/worker/match/toggle` | Войти/выйти из очереди |
 | `GET /api/payments/due_to?user_id=` | Дата окончания подписки |
 | `POST /api/payments/webhook/yookassa` | Принять платёжный webhook |
-| `GET /api/dict/words?user_id=` | Слова пользователя |
 | `GET /api/sockets/chat/rooms/{room_id}/messages` | История сообщений (зашифровано Fernet) |
 
 ## Что делает web-app-service сам (без Gateway)
@@ -58,9 +56,9 @@ http://217.149.29.173:1000
 
 ## Для Foray
 
-Gateway остаётся как есть. Мобильное приложение будет обращаться к тем же Gateway эндпоинтам, но через новый мобильный API-слой, который заменит `web-app-service` в части аутентификации.
+Gateway остаётся как есть. Мобильное приложение обращается к тем же Gateway эндпоинтам через новый мобильный API-слой.
 
 Нужно добавить в Gateway:
-- Эндпоинт регистрации через email/телефон (не Telegram)
+- Эндпоинты auth: `register`, `login`, `refresh`, `verify`
 - Push-токены (FCM/APNs) для уведомлений о матче
 - Refresh token эндпоинт

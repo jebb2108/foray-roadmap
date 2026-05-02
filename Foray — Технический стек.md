@@ -14,7 +14,6 @@ tags: [foray, tech-stack, mobile, new-app]
 - Один кодобаза для iOS и Android
 - WebSocket-клиенты работают нативно
 - Большая экосистема для чат-приложений
-- Команда уже знает JS (фронтенд существующего сервиса — JS)
 
 **Ключевые библиотеки:**
 
@@ -24,7 +23,6 @@ tags: [foray, tech-stack, mobile, new-app]
 | WebSocket | встроенный `WebSocket` API |
 | Push-уведомления | `react-native-firebase` (FCM + APNs через FCM) |
 | Хранение токенов | `react-native-keychain` |
-| Аудио запись | `react-native-audio-recorder-player` |
 | Платежи | `react-native-yookassa` / `@stripe/stripe-react-native` |
 | HTTP-клиент | `axios` или `fetch` |
 | Состояние | `zustand` или `redux-toolkit` |
@@ -47,7 +45,7 @@ tags: [foray, tech-stack, mobile, new-app]
 | Push токены | Хранить FCM/APNs токены пользователей |
 | WebSocket auth | Принимать access-токен вместо чат-токена |
 
-Для [[WebSocket Чат|WebSocket]]-состояния рекомендуется мигрировать с in-memory на **Redis** (для нескольких инстансов).
+Для [[WebSocket Чат|WebSocket]]-состояния рекомендуется мигрировать с in-memory на **Redis**.
 
 ---
 

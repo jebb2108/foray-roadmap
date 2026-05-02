@@ -2,17 +2,11 @@
 tags: [foray, auth, mobile, new-app]
 ---
 
-# Foray — Аутентификация (без Telegram)
+# Foray — Аутентификация
 
-← [[🗺️ Foray — Карта проекта]] | Текущая система: [[Аутентификация — Telegram]]
+← [[🗺️ Foray — Карта проекта]]
 
-## Задача
-
-Заменить Telegram ID как единственный identity provider на собственную систему аккаунтов. Telegram может оставаться **опциональным** (например, для уведомлений), но не обязательным.
-
----
-
-## Рекомендуемая схема: Email + Access/Refresh JWT
+## Схема: Email + Access/Refresh JWT
 
 ### Регистрация
 
@@ -28,7 +22,7 @@ POST /api/auth/register
   "intro": "Hi!"
 }
     ↓
-Отправить письмо подтверждения (Resend — уже есть)
+Письмо подтверждения (Resend — уже есть в Gateway)
     ↓
 GET /api/auth/verify?token=<email_verification_token>
     ↓
@@ -58,18 +52,18 @@ POST /api/auth/refresh
 
 ---
 
-## JWT структура для Foray
+## JWT структура
 
 ```json
 {
   "user_id": "uuid",
   "nickname": "...",
-  "type": "access",         // или "refresh"
+  "type": "access",
   "expires_at": 1234567890
 }
 ```
 
-**Отличие от текущего:** токен не содержит данных матча (они передаются отдельно при подключении к WebSocket).
+Токен не содержит данных матча — они передаются отдельно при подключении к [[WebSocket Чат|WebSocket]].
 
 ---
 
@@ -79,37 +73,23 @@ POST /api/auth/refresh
 |-----------|-----------|
 | iOS | Keychain |
 | Android | EncryptedSharedPreferences / Keystore |
-| **Никогда** | AsyncStorage / localStorage (небезопасно) |
-
----
-
-## Опциональный Telegram
-
-Пользователь может **привязать** Telegram аккаунт в настройках:
-- Для получения уведомлений через бота
-- Для импорта существующего профиля (миграция с chat.lllang.site)
-
-```
-POST /api/auth/link-telegram
-{ "telegram_id": "...", "telegram_init_data": "..." }
-```
+| **Никогда** | AsyncStorage / localStorage |
 
 ---
 
 ## Нужные изменения в Gateway
 
 1. Новая таблица `accounts` с `email`, `password_hash`, `user_id`
-2. Эндпоинт `POST /api/auth/register`
-3. Эндпоинт `POST /api/auth/login`
-4. Эндпоинт `POST /api/auth/refresh`
-5. Эндпоинт `GET /api/auth/verify`
-6. Поле `telegram_id` остаётся опциональным в профиле
+2. `POST /api/auth/register`
+3. `POST /api/auth/login`
+4. `POST /api/auth/refresh`
+5. `GET /api/auth/verify`
 
 ---
 
 ## Безопасность
 
-- Пароли: **bcrypt** (не md5/sha)
+- Пароли: **bcrypt**
 - Refresh токены хранить в БД (возможность отзыва)
-- Access токены: HS256 с нормальным секретом (не `"lambo"`)
+- Access токены: HS256 с надёжным секретом
 - Rate limiting на `/api/auth/login` против brute force

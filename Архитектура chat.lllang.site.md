@@ -8,7 +8,7 @@ tags: [architecture, existing-system, reference]
 
 ## Обзор
 
-`chat.lllang.site` — Telegram Mini App для парных разговорных сессий на английском языке. Реализован как тонкий прокси-слой поверх внутреннего [[Gateway Сервис|Gateway]].
+`chat.lllang.site` — веб-приложение для парных разговорных сессий на английском языке. Реализован как тонкий прокси-слой поверх внутреннего [[Gateway Сервис|Gateway]].
 
 ## Технический стек
 
@@ -34,7 +34,6 @@ web-app-service/
 │   │   ├── waiting_room.py  # /api/user/*
 │   │   ├── matchmaking.py   # /api/worker/*
 │   │   ├── websockets.py    # /api/sockets/ws/chat
-│   │   ├── dictionary.py    # /api/dict/*
 │   │   └── payments.py      # /api/payments/webhook/*
 │   ├── services/
 │   │   └── connection.py    # In-memory WebSocket state
@@ -42,31 +41,27 @@ web-app-service/
 │       └── tokens.py        # JWT create/validate
 └── front/
     ├── chat/                # Зал ожидания + чат
-    ├── dict/                # Словарь
     └── main/                # Лендинг + email templates
 ```
 
-## Три субдомена
+## Субдомены
 
 | Субдомен | Назначение |
 |----------|------------|
 | `lllang.site` | Лендинг |
 | `chat.lllang.site` | Зал ожидания + чат (основной продукт) |
-| `dict.lllang.site` | Словарь |
 
 ## Ключевые зависимости
 
 - **[[Gateway Сервис]]** — хранит все данные: пользователи, матчи, сообщения, платежи
-- **[[Аутентификация — Telegram]]** — идентификация через Telegram ID
 - **[[Матчмейкинг]]** — алгоритм подбора пар
 - **[[WebSocket Чат]]** — реалтайм коммуникация
-- **[[Словарь]]** — персональный словарный запас
 - **[[Подписки и Платежи]]** — монетизация
 
 ## Слабые места (для Foray)
 
 - In-memory WebSocket state → теряется при рестарте
-- Telegram ID как единственный identity provider
+- Нет собственной системы аккаунтов
 - Секрет JWT (`lambo`) — нужно сменить
 - Нет мобильного нативного опыта
 - Polling каждую секунду для матчмейкинга (неэффективно для мобильных)

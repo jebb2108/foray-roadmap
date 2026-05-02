@@ -6,7 +6,7 @@ tags: [api, reference, existing-system]
 
 ← [[🗺️ Foray — Карта проекта]]
 
-Полный справочник эндпоинтов `web-app-service`. Для эндпоинтов самого [[Gateway Сервис|Gateway]] — см. отдельную заметку.
+Справочник эндпоинтов `web-app-service`. Для эндпоинтов самого [[Gateway Сервис|Gateway]] — см. отдельную заметку.
 
 ---
 
@@ -23,7 +23,6 @@ tags: [api, reference, existing-system]
 | GET | `/api/user/partner_info` | `?match_id=` | Профиль партнёра по match_id |
 | POST | `/api/user/send_email` | body: `{user_id, email}` | Отправить письмо подтверждения через Resend |
 | GET | `/api/user/create_token` | `?user_id=&match_id=&room_id=` | Выдать JWT для чат-сессии |
-| POST | `/api/user/exchange_contacts` | body: `{user_id, match_id}` | Запрос обмена Telegram-контактами |
 
 ---
 
@@ -46,19 +45,6 @@ tags: [api, reference, existing-system]
 | Протокол | Путь | Query-параметры | Описание |
 |----------|------|-----------------|----------|
 | WS | `/api/sockets/ws/chat` | `?user_id=&token=` | Основной чат канал |
-
----
-
-## `/api/dict` — Словарь
-
-| Метод | Путь | Доступ | Описание |
-|-------|------|--------|----------|
-| GET | `/api/dict/words` | Открытый | Мои слова |
-| POST | `/api/dict/words` | Подписка | Добавить слово |
-| PUT | `/api/dict/words` | Подписка | Изменить слово |
-| DELETE | `/api/dict/words` | Подписка | Удалить слово |
-| GET | `/api/dict/words/search` | Подписка | Поиск (личные + публичные) |
-| GET | `/api/dict/stats` | Открытый | Статистика |
 
 ---
 
