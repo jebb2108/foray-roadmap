@@ -4,7 +4,7 @@ tags: [foray, roadmap, mobile, new-app]
 
 # Foray — Роадмап
 
-← [[🗺️ Foray — Карта проекта]]
+← [[🗺️ Foray — Карта проекта (Обновлено)]]
 
 ## Принцип
 

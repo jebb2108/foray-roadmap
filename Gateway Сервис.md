@@ -4,7 +4,7 @@ tags: [gateway, backend, infrastructure, existing-system]
 
 # Gateway Сервис
 
-← [[🗺️ Foray — Карта проекта]]
+← [[🗺️ Foray — Карта проекта (Обновлено)]]
 
 ## Роль
 
