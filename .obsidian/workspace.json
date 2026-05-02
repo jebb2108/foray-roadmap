@@ -95,14 +95,18 @@
             "id": "6f20660050c568eb",
             "type": "leaf",
             "state": {
-              "type": "graph",
-              "state": {},
-              "icon": "lucide-git-fork",
-              "title": "Graph view"
+              "type": "markdown",
+              "state": {
+                "file": "Foray — Интерфейс и UX.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "Foray — Интерфейс и UX"
             }
           }
         ],
-        "currentTab": 1
+        "currentTab": 2
       }
     ],
     "direction": "vertical"
@@ -267,7 +271,7 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "73d84c48d0d57daa",
+  "active": "6f20660050c568eb",
   "lastOpenFiles": [
     "Foray — Интерфейс и UX.md",
     "Резюме Переработки Архитектуры.md",
