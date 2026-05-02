@@ -88,24 +88,25 @@
               },
               "pinned": true,
               "icon": "terminal",
-              "title": "Terminal: ⠐ Claude Code"
+              "title": "Terminal: ✳ Refactor app architecture with client-server separation"
             }
           },
           {
             "id": "6f20660050c568eb",
             "type": "leaf",
             "state": {
-              "type": "bases",
+              "type": "markdown",
               "state": {
-                "file": "Untitled.base",
-                "viewName": "View"
+                "file": "🗺️ Foray — Карта проекта (Обновлено).md",
+                "mode": "source",
+                "source": false
               },
-              "icon": "lucide-table",
-              "title": "Untitled"
+              "icon": "lucide-file",
+              "title": "🗺️ Foray — Карта проекта (Обновлено)"
             }
           }
         ],
-        "currentTab": 1
+        "currentTab": 2
       }
     ],
     "direction": "vertical"
@@ -270,21 +271,22 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "73d84c48d0d57daa",
+  "active": "6f20660050c568eb",
   "lastOpenFiles": [
     "Untitled.base",
+    "Untitled.canvas",
+    "Подписки и Платежи.md",
+    "🗺️ Foray — Карта проекта (Обновлено).md",
+    "🗺️ Foray — Карта проекта.md",
     "Untitled.md",
     "Резюме Переработки Архитектуры.md",
     "Переработанная Архитектура Foray.md",
-    "🗺️ Foray — Карта проекта (Обновлено).md",
-    "🗺️ Foray — Карта проекта.md",
     "Gateway и Микросервисы Мессенджера.md",
     "Архитектура chat.lllang.site.md",
     "Матчмейкинг.md",
     "WebSocket Чат.md",
     "Foray — Роадмап.md",
     "Жизненный цикл сессии.md",
-    "Подписки и Платежи.md",
     "Gateway Сервис.md",
     "API Эндпоинты.md",
     "Foray — Обзор.md",

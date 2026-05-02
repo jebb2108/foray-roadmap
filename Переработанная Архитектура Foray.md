@@ -1,685 +1,522 @@
 ---
-tags: [foray, architecture, new-design, mobile-first]
+tags: [foray, architecture, mobile-first]
 ---
 
-# Переработанная Архитектура Foray
+# Архитектура Foray
 
-← [[🗺️ Foray — Карта проекта]]
+← [[🗺️ Foray — Карта проекта (Обновлено)]]
 
-## Новая концепция
+Foray — мобильное приложение для поиска единомышленников через текстовый чат по общим интересам.
 
-**Было:** Веб-сайт для парных разговорных сессий на английском языке  
-**Стало:** Мобильное приложение для поиска единомышленников через текстовый чат на основе общих интересов
+---
 
-## Высокоуровневая архитектура
-
-```
-┌──────────────────────────────────────────────────────────────────────┐
-│                   FORAY Mobile Apps (iOS/Android)                     │
-│                                                                        │
-│  ├── Authentication Flow (email/password, social)                     │
-│  ├── Profile Management (interests, bio, avatar)                      │
-│  ├── Matchmaking Screen (visual queue, interests filter)              │
-│  ├── Messaging Interface (real-time chat, typing indicators)          │
-│  ├── Partner Rating (1-5 stars + comment)                            │
-│  ├── Notifications (Push: FCM on Android, APNs on iOS)               │
-│  └── Offline Mode (local message cache)                              │
-└───────────────────────────────┬────────────────────────────────────────┘
-                                │
-         ┌──────────────────────┼──────────────────────┐
-         │                      │                      │
-         ▼                      ▼                      ▼
-   REST API (HTTP)      WebSocket (Real-time)   Push Notifications
-         │                      │                      │
-┌────────▼──────────────────────▼──────────────────────▼─────────────┐
-│                  API Gateway & Router                               │
-│           (Load Balancer, Request Routing)                          │
-│                                                                      │
-│  - Rate limiting                                                    │
-│  - Request validation                                              │
-│  - Centralized logging                                             │
-│  - API versioning (/v1/, /v2/)                                     │
-└────────┬───────────────────────────────────────────────────────────┘
-         │
-    ┌────┴────────────────────────────────────────────┐
-    │                                                  │
-    ▼                                                  ▼
-┌────────────────────────┐                ┌──────────────────────────┐
-│   Authentication       │                │  Message Broker          │
-│   Service              │                │  (Redis Pub/Sub)         │
-│                        │                │                          │
-│ - Login/Register       │                │ - WebSocket events       │
-│ - Token refresh        │                │ - Notifications          │
-│ - Email verification   │                │ - Match events           │
-│ - Password reset       │                │                          │
-│                        │                │                          │
-│ JWT + Refresh Token    │                │ Redis Streams            │
-└────────┬───────────────┘                └──────────────────────────┘
-         │
-    ┌────┴──────────────────────────────────────────────────┐
-    │                                                        │
-    ▼                                                        ▼
-┌──────────────────────────────┐                ┌──────────────────────┐
-│   Microservices              │                │  Shared Services     │
-│   (Business Logic)           │                │                      │
-│                              │                │ ├── Redis Cache      │
-│ ├── User Service             │                │ │   (profiles,       │
-│ │   (profiles, interests)    │                │ │    interests)      │
-│ │                            │                │ │                    │
-│ ├── Matchmaking Service      │                │ ├── PostgreSQL       │
-│ │   (queue, algorithm)       │                │ │   (primary store)  │
-│ │                            │                │ │                    │
-│ ├── Messaging Service        │                │ ├── Elasticsearch    │
-│ │   (chat, history)          │                │ │   (message search) │
-│ │                            │                │ │                    │
-│ ├── Rating Service           │                │ ├── S3 / MinIO       │
-│ │   (partners, reviews)      │                │ │   (avatars, media) │
-│ │                            │                │ │                    │
-│ ├── Notification Service     │                │ └── Resend           │
-│ │   (FCM, APNs, email)       │                │    (email service)  │
-│ │                            │                │                     │
-│ ├── Payment Service          │                │                     │
-│ │   (YooKassa, subscriptions)│                │                     │
-│ │                            │                │                     │
-│ └── WebSocket Service        │                │                     │
-│     (real-time, Redis store) │                │                     │
-└──────────────────────────────┘                └──────────────────────┘
-```
-
-## Новый концепт: Основные отличия
-
-| Аспект | chat.lllang.site | Foray |
-|--------|-----------------|-------|
-| **Платформа** | Веб | Мобильное (iOS/Android) |
-| **Цель сессии** | Обучение английскому | Поиск единомышленников |
-| **Время сессии** | 15 минут (зафиксировано) | Не ограничено или дольше |
-| **Матчмейкинг** | По языковому уровню | По интересам + рейтингу |
-| **История контактов** | Не сохраняется | Друзья / чёрный список |
-| **Рейтинг** | Нет | 1-5 звёзд после сессии |
-| **Notifications** | Polling | Push (FCM/APNs) |
-| **Offline** | Невозможно | Локальный кэш сообщений |
-| **Платежи** | YooKassa | YooKassa + Apple Pay + Google Pay |
-
-## Концептуальные диаграммы по функциям
-
-### 1. Регистрация и Профиль
+## Общая схема
 
 ```
-User opens app
-    │
-    ├─→ Not authenticated?
-    │    └─→ Registration Screen
-    │        │
-    │        ├─ Email input
-    │        ├─ Password input
-    │        ├─ Nickname input
-    │        └─ Interests selection (tags)
-    │        │
-    │        ▼
-    │    POST /auth/register
-    │        │
-    │        ▼
-    │    Authentication Service
-    │        ├─ Validate input
-    │        ├─ Hash password
-    │        ├─ Create user in PostgreSQL
-    │        └─ Send verification email
-    │        │
-    │        ▼
-    │    Return JWT + refresh_token
-    │        │
-    │        ▼
-    │    Email Verification Screen
-    │        │
-    │        ▼
-    │    POST /auth/verify?code=XXX
-    │        │
-    │        ▼
-    │    ✅ Authenticated
-    │
-    └─→ Authenticated?
-         └─→ Profile Setup (avatar, bio, detailed interests)
+┌─────────────────────────────────────────────────────────────────┐
+│                          КЛИЕНТ                                  │
+│                  React Native  (iOS + Android)                   │
+│                                                                   │
+│  Экраны:  Auth · Profile · Queue · Chat · Rating · Settings     │
+│                                                                   │
+│  Токены:  expo-secure-store                                      │
+│  Кэш:     AsyncStorage / MMKV                                    │
+│  WS:      socket.io-client                                       │
+│  Push:    FCM (Android)  /  APNs (iOS)                          │
+└────────────────────────┬────────────────────────────────────────┘
+                         │  HTTPS  +  WSS
+                         ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                          СЕРВЕР                                  │
+│                                                                   │
+│  ┌───────────────────────────────────────────────────────────┐  │
+│  │           Gateway  (Nginx + FastAPI  :8000)               │  │
+│  │   JWT-валидация · Rate limiting · Маршрутизация           │  │
+│  └──────┬──────────────┬────────────┬────────────┬──────────┘  │
+│         │              │            │            │              │
+│         ▼              ▼            ▼            ▼              │
+│  ┌───────────┐  ┌──────────┐  ┌─────────┐  ┌──────────┐       │
+│  │   Auth    │  │   Core   │  │  Chat   │  │ Payment  │       │
+│  │  Service  │  │  Service │  │ Service │  │ Service  │       │
+│  │  :3001    │  │  :3002   │  │  :3003  │  │  :3004   │       │
+│  └───────────┘  └──────────┘  └─────────┘  └──────────┘       │
+│                                                                   │
+│  ┌───────────────────────────────────────────────────────────┐  │
+│  │                     Infrastructure                        │  │
+│  │            PostgreSQL  ·  Redis  ·  S3 / MinIO            │  │
+│  └───────────────────────────────────────────────────────────┘  │
+│                                                                   │
+│  Внешние:  Resend (email)  ·  FCM / APNs (push)  ·  YooKassa   │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Клиент
+
+**Стек:** React Native + Expo managed workflow
+
+| Слой | Инструмент |
+|------|-----------|
+| Навигация | expo-router (file-based) |
+| Серверное состояние | TanStack Query |
+| Локальное состояние | Zustand |
+| HTTP-клиент | axios (interceptor для refresh) |
+| WebSocket | socket.io-client |
+| Токены | expo-secure-store |
+| Кэш/офлайн | AsyncStorage + MMKV |
+| Push | expo-notifications |
+| Медиа | expo-image-picker |
+
+**Структура экранов:**
+
+```
+App
+├── Auth
+│   ├── Welcome
+│   ├── Login
+│   ├── Register
+│   └── EmailVerify
+│
+└── Main  (требует авторизации)
+    ├── Home  ← Queue Screen (точка входа)
+    ├── Chat
+    │   ├── ChatList
+    │   └── ChatScreen
+    ├── Profile
+    │   ├── MyProfile
+    │   └── EditProfile
+    ├── Rating       ← появляется после сессии
+    └── Settings
+        ├── Subscription
+        └── Account
+```
+
+**Жизненный цикл токенов:**
+```
+Login → { access_token (15 мин), refresh_token (30 дней) }
              │
-             ▼
-         PUT /user/profile
-             │
-             ▼
-         Main Screen (Matchmaking Queue)
+             ├─ access_token → SecureStore
+             └─ refresh_token → SecureStore (httpOnly аналог)
+
+axios interceptor:
+  ошибка 401 → POST /api/auth/refresh → новый access_token → retry
 ```
 
-### 2. Матчмейкинг (Поиск партнёра)
+---
+
+## Сервер
+
+### Gateway  (:8000)
+
+Единая точка входа для всех запросов.
 
 ```
-User clicks "Find someone"
+Входящий запрос
+    │
+    ├── Nginx: TLS, статические ресурсы
     │
     ▼
-POST /matchmaking/join-queue
+FastAPI (gateway-service)
     │
-    ├─ Check subscription (active?)
-    ├─ Check profile (complete?)
-    └─ Add to Redis queue
+    ├── JWT middleware
+    │     Проверяет Authorization: Bearer <token>
+    │     Публичный ключ RS256 (только верификация, не выдача)
+    │     Исключения: /api/auth/register · /api/auth/login · /api/auth/refresh
     │
-    ▼
-UI: Waiting Room
+    ├── Rate limiting  (Redis)
+    │     100 req/min  — per IP
+    │     1000 req/min — per user_id
     │
-    ├─ Show animated queue (5 people waiting...)
-    ├─ Show your interests
-    ├─ Show filters applied
-    └─ Option to adjust interests
-    │
-    ▼
-[Behind the scenes: Matchmaking Service]
-    │
-    ├─ Algorithm: similarity(interests) + rating
-    │
-    └─ When match found:
-         │
-         ├─ Create room_id
-         ├─ Create match in PostgreSQL
-         ├─ Publish to Redis Pub/Sub
-         │
-         ▼
-    Push Notification (FCM/APNs)
-    "Found a match! Accept?"
-         │
-         ├─→ User 1 taps notification
-         │    └─→ WebSocket connect + sends "confirm"
-         │
-         ├─→ User 2 taps notification
-         │    └─→ WebSocket connect + sends "confirm"
-         │
-         ▼
-    Both confirmed?
-         │
-         └─→ YES: match_ready event
-                 │
-                 ▼
-             Messaging Screen opens
-                 │
-                 ├─ Show partner info
-                 ├─ Show chat history
-                 ├─ Ready for messaging
-                 │
-                 ▼
-             WebSocket: wss://.../ws/chat
-                 (Real-time messaging begins)
+    └── Reverse proxy  →  нужный сервис (httpx async)
+
+Таблица маршрутов:
+  /api/auth/*      →  Auth Service    :3001
+  /api/users/*     →  Core Service    :3002
+  /api/match/*     →  Core Service    :3002
+  /api/ratings/*   →  Core Service    :3002
+  /api/messages/*  →  Chat Service    :3003
+  /api/ws/*        →  Chat Service    :3003
+  /api/payments/*  →  Payment Service :3004
 ```
 
-### 3. Реальный Чат
+---
+
+### Auth Service  (:3001)
+
+Аутентификация и управление сессиями.
 
 ```
-User in chat
-    │
-    ├─ WebSocket connected
-    │
-    ├─ Can send messages
-    │    └─ {type: "message", content: "Hi!"}
-    │       │
-    │       ▼
-    │    Messaging Service
-    │       ├─ Encrypt message (Fernet)
-    │       ├─ Save to PostgreSQL + Elasticsearch
-    │       ├─ Broadcast via Redis Pub/Sub
-    │       │
-    │       ▼
-    │    Partner receives in real-time
-    │       │
-    │       ▼
-    │    If app in background → Push notification
-    │
-    ├─ Can type
-    │    └─ {type: "typing"}
-    │       → Partner sees indicator
-    │
-    ├─ Can upload media (images)
-    │    └─ POST /messages/upload
-    │       │
-    │       ▼
-    │    Save to S3/MinIO
-    │    Return signed URL
-    │    Encrypt metadata
-    │
-    └─ Session ends when?
-         │
-         ├─ User exits chat (soft end)
-         ├─ Both go offline (hard end)
-         ├─ 24 hours pass (automatic)
-         │
-         ▼
-    POST /sessions/{room_id}/end
-         │
-         ▼
-    Rating Screen appears
-         │
-         ├─ 1-5 stars
-         ├─ Optional comment
-         ├─ Report? (inappropriate)
-         │
-         ▼
-    POST /ratings/create
-         │
-         ▼
-    Partner added to Friends / Blocked list
+POST  /api/auth/register          регистрация
+POST  /api/auth/login             вход
+POST  /api/auth/logout            выход (инвалидация refresh)
+POST  /api/auth/refresh           обновить access_token
+POST  /api/auth/verify-email      подтверждение email
+POST  /api/auth/forgot-password   запрос сброса пароля
+POST  /api/auth/reset-password    сброс пароля
+
+Схема БД (schema: auth):
+  users          (id, email, password_hash, nickname, verified, created_at)
+  refresh_tokens (token_hash, user_id, expires_at, revoked)
+  email_codes    (code_hash, user_id, type, expires_at)
+
+Redis:
+  auth:blacklist:{jti}    — отозванные access-токены (TTL = exp)
+  auth:code:{user_id}     — rate limit на отправку кодов
+
+Зависимости:
+  PostgreSQL · Redis · Resend
 ```
 
-### 4. Рейтинговая система
+---
 
+### Core Service  (:3002)
+
+Профили, матчмейкинг, рейтинги.
+
+**Профили:**
 ```
-After chat ends
-    │
-    ▼
-Rating Screen
-    │
-    ├─ Show partner avatar + name
-    ├─ "How was this conversation?"
-    │
-    ├─ Star rating (1-5)
-    ├─ Optional text comment
-    ├─ "Report user" button
-    │
-    ▼
-POST /ratings/create
-    │
-    ├─ Validate user participated
-    ├─ Save rating to PostgreSQL
-    ├─ Update partner's average_rating
-    ├─ Update matchmaking algorithm weights
-    │
-    ▼
-✅ Saved
-    │
-    ├─ Can view partner's profile + reviews
-    ├─ Add to "Liked" or "Blocked"
-    │
-    ▼
-Matchmaking uses rating:
-    │
-    ├─ Higher rated users matched first
-    ├─ Blocked users not matched with each other
-    └─ Low-rated accounts get restricted (warning → shadowban)
+GET    /api/users/me          мой профиль
+PUT    /api/users/me          обновить (интересы, аватар, bio)
+GET    /api/users/:id         профиль пользователя (публичный)
+DELETE /api/users/me          удалить аккаунт
 ```
 
-### 5. Система аккаунтов и безопасность
-
+**Матчмейкинг:**
 ```
-Authentication Flow:
+POST   /api/match/join        войти в очередь
+DELETE /api/match/leave       выйти из очереди
+GET    /api/match/status      позиция и размер очереди
+GET    /api/matches/:id       данные матча (room_id, партнёр)
+POST   /api/matches/:id/end   завершить сессию
 
-1. Registration
-   └─ POST /auth/register (email, password, nickname, interests)
-      │
-      ├─ Hash password with bcrypt
-      ├─ Create user in PostgreSQL
-      ├─ Generate email verification code
-      ├─ Send via Resend
-      │
-      ▼
-      Return: { status: "verify_email" }
-
-2. Email Verification
-   └─ POST /auth/verify-email (code)
-      │
-      ├─ Check code validity (5 min expiry)
-      ├─ Mark user as verified
-      │
-      ▼
-      Return: { access_token, refresh_token }
-
-3. Login
-   └─ POST /auth/login (email, password)
-      │
-      ├─ Verify password
-      ├─ Generate JWT (access_token) + refresh_token
-      │
-      ▼
-      Return: { access_token, refresh_token, expires_in }
-
-4. Token Management
-   └─ Access token (JWT)
-      ├─ Short-lived (15 min)
-      ├─ Signed with RS256 (asymmetric)
-      │
-      └─ Refresh token
-         ├─ Longer-lived (30 days)
-         ├─ Stored in secure HTTP-only cookie
-         │
-      When access token expires:
-      └─ POST /auth/refresh
-         │
-         ├─ Validate refresh token
-         ├─ Issue new access_token
-         │
-         ▼
-         Return: { access_token }
-
-5. Password Reset
-   └─ POST /auth/forgot-password (email)
-      │
-      ├─ Generate reset code
-      ├─ Send via Resend
-      │
-      ▼
-      POST /auth/reset-password (code, new_password)
-      │
-      ├─ Verify code
-      ├─ Hash new password
-      ├─ Update in PostgreSQL
-      │
-      ▼
-      ✅ Password changed
+Воркер  (asyncio background task, каждые 5 сек):
+  1. ZRANGEBYSCORE match:queue → первые N пользователей
+  2. Для каждой пары считаем score:
+       interests_sim  = Jaccard(A.interests, B.interests)  × 0.5
+       rating_sim     = 1 − |A.rating − B.rating| / 5      × 0.3
+       wait_bonus     = min(wait_sec / 300, 1.0)            × 0.2
+  3. Лучшая пара с score > 0.5 → создать match в БД
+  4. PUBLISH match:{user_id} для обоих
+  5. Push: "Нашли партнёра — подтвердите!"
 ```
 
-## Микросервисная архитектура мессенджера
-
+**Рейтинги:**
 ```
-┌──────────────────────────────────────────────────────────────┐
-│              API Gateway (Kong / NGINX)                       │
-│  - Authentication (JWT)                                       │
-│  - Rate limiting                                              │
-│  - Request routing                                            │
-└─────────────┬────────────────────────────────────────────────┘
-              │
-    ┌─────────┴──────────┬──────────────┬───────────────┐
-    │                    │              │               │
-    ▼                    ▼              ▼               ▼
-┌─────────────┐  ┌─────────────┐ ┌──────────┐  ┌──────────┐
-│ Auth        │  │ Messaging   │ │Matchmake │  │ Rating   │
-│ Service     │  │ Service     │ │ Service  │  │ Service  │
-│ (Port 3001)│  │ (Port 3002) │ │(Port3003)│  │(Port3004)│
-│             │  │             │ │          │  │          │
-│ Endpoints:  │  │ Endpoints:  │ │Endpoints:│  │Endpoints:│
-│ /auth/*     │  │ /messages/* │ │/queue/*  │  │/ratings/*│
-│             │  │ /chat/*     │ │/matches/*│  │/reviews/*│
-│             │  │ /upload/*   │ │          │  │          │
-│             │  │             │ │ Uses:    │  │ Uses:    │
-│ Uses:       │  │ Uses:       │ │ -Redis   │  │ -Postgre │
-│ -PostgreSQL │  │ -Redis      │ │ -RabbitMQ  │ │-SQL      │
-│ -Redis      │  │ -PostgreSQL │ │          │  │          │
-│ -Resend     │  │ -S3/MinIO   │ │          │  │          │
-│ -JWT lib    │  │ -Elasticsearch          │  │          │
-└──────┬──────┘  └──────┬──────┘ └────┬─────┘  └──────────┘
-       │                │             │
-       │                ▼             │
-       │         ┌──────────────┐     │
-       │         │WebSocket     │     │
-       │         │Handler Srv   │     │
-       │         │(Port 3005)   │     │
-       │         │              │     │
-       │         │Maintains:    │     │
-       │         │- Connections │     │
-       │         │- Rooms       │     │
-       │         │- Sessions    │     │
-       │         │              │     │
-       │         │Uses:         │     │
-       │         │- Redis       │     │
-       │         │- Socket.io   │     │
-       │         └──────┬───────┘     │
-       │                │             │
-       │                ▼             │
-       │         ┌─────────────────┐  │
-       │         │Message Broker   │  │
-       │         │(RabbitMQ/Redis) │  │
-       │         │                 │  │
-       │         │Queues:          │  │
-       │         │- chat.messages  │  │
-       │         │- notifications  │  │
-       │         │- match.events   │  │
-       │         │- ratings.created│  │
-       │         └────────┬────────┘  │
-       │                  │           │
-       └──────────────────┼───────────┘
-                          │
-            ┌─────────────┼─────────────┐
-            │             │             │
-            ▼             ▼             ▼
-        PostgreSQL    Redis Cache    Elasticsearch
-        (Main DB)    (Session,       (Message
-                      Queues)        Indexing)
+POST   /api/ratings           оценить партнёра (после сессии)
+GET    /api/ratings/user/:id  оценки пользователя
+
+После оценки:
+  → пересчёт avg_rating в user_stats
+  → ≥ 3 оценок ≤ 2★  → флаг "под проверкой"
+  → ≥ 5 оценок ≤ 2★  → shadow ban (скрытие из очереди)
 ```
 
-## Описание каждого микросервиса мессенджера
-
-### 1. Authentication Service (Port 3001)
-
+**Схема БД (schema: core):**
 ```
-/auth/register              POST  Register new user
-/auth/login                 POST  Login user
-/auth/logout                POST  Logout (invalidate token)
-/auth/refresh               POST  Get new access token
-/auth/verify-email          POST  Verify email with code
-/auth/forgot-password       POST  Send reset email
-/auth/reset-password        POST  Reset password
-/auth/profile               GET   Get current user profile
-/auth/profile               PUT   Update profile (interests, bio)
-/auth/delete-account        DELETE Delete account
-
-Database:
-- users (id, email, password_hash, nickname, avatar_url, bio, interests[], 
-         verified, created_at, updated_at, deleted_at)
-- refresh_tokens (token, user_id, expires_at)
-- email_verification (code, user_id, expires_at)
-- password_resets (code, user_id, expires_at)
-
-Internal APIs used:
-- PostgreSQL
-- Redis (cache, token blacklist)
-- Resend (email service)
+profiles     (user_id, nickname, avatar_url, bio, avg_rating, ban_status)
+interests    (user_id, tag)
+matches      (id, user1_id, user2_id, room_id, status, created_at, ended_at)
+ratings      (id, from_user_id, to_user_id, match_id, stars, comment, created_at)
+user_stats   (user_id, total_matches, flag_count, shadow_banned)
 ```
 
-### 2. Messaging Service (Port 3002)
-
+**Redis:**
 ```
-WebSocket: /chat/ws?user_id=X&token=JWT
-  ├─ On connect: Load message history, partner status
-  ├─ Messages: {type: "message", content, attachments[]}
-  ├─ Typing: {type: "typing"}
-  └─ Disconnect: Cleanup, save session
-
-REST endpoints:
-/messages/list              GET   Get chat history (paginated)
-/messages/search            GET   Search in messages
-/messages/upload            POST  Upload image/file
-/messages/mark-read         POST  Mark messages as read
-/messages/{id}/delete       DELETE Delete message (soft)
-
-Database:
-- messages (id, room_id, sender_id, content, content_encrypted,
-            attachments[], read_by[], created_at, deleted_at)
-- chat_rooms (id, user1_id, user2_id, created_at, ended_at, is_active)
-- read_receipts (message_id, user_id, read_at)
-
-Internal APIs used:
-- PostgreSQL
-- Elasticsearch (full-text search)
-- Redis Pub/Sub (real-time delivery)
-- Redis Cache (active connections)
-- S3/MinIO (media storage)
+match:queue          Sorted Set  (score = join_timestamp)
+match:{user_id}      Pub/Sub канал уведомлений матча
+profile:{user_id}    кэш профиля (TTL 5 мин)
 ```
 
-### 3. Matchmaking Service (Port 3003)
+---
 
+### Chat Service  (:3003)
+
+Реальный времени чат + история сообщений.
+
+**WebSocket:**
 ```
-/queue/join                 POST  Join queue
-/queue/leave                POST  Leave queue
-/queue/status               GET   Get current queue status
-/queue/user-status          GET   Get your position in queue
-/matches/list               GET   Your match history
-/matches/{id}               GET   Match details
-/matches/{id}/end           POST  End match/session
+WS  /api/ws/chat?token=<JWT>
 
-Database:
-- queue (user_id, joined_at, interests_filter[], status)
-- matches (id, user1_id, user2_id, room_id, created_at, ended_at, 
-          status: pending/accepted/rejected/completed)
-- match_history (user_id, match_id, joined_at, left_at)
+Клиент → сервер:
+  { type: "message",  content: "...", attachments: [] }
+  { type: "typing" }
+  { type: "read",     message_id: "..." }
 
-Matchmaking Algorithm:
-1. Get top 5 users from queue
-2. For each pair calculate similarity:
-   - Shared interests (Jaccard similarity)
-   - Rating difference (prefer similar ratings)
-   - Geography (if available)
-   - Time in queue (fairness)
-3. Create match when score > threshold
-4. Send push notifications to both
+Сервер → клиент:
+  { type: "message",        ...payload }
+  { type: "typing",         user_id }
+  { type: "read",           message_id }
+  { type: "partner_status", status: "online|offline" }
+  { type: "match_ready",    room_id, partner }
+  { type: "session_ended" }
 
-Internal APIs used:
-- PostgreSQL
-- Redis (queue management)
-- RabbitMQ (async matching)
-- Notification Service (push)
+Масштабирование:
+  Каждый инстанс Chat Service подписан на Redis Pub/Sub
+  channel room:{room_id} → рассылает всем подключённым клиентам
 ```
 
-### 4. Rating Service (Port 3004)
-
+**REST:**
 ```
-/ratings/create             POST  Submit rating for partner
-/ratings/user/{id}          GET   Get user's ratings (public profile)
-/ratings/my-ratings         GET   Get your ratings
-/ratings/{id}/update        PUT   Update your rating (within 24h)
-/ratings/{id}/delete        DELETE Delete rating (within 24h)
-/reviews/list               GET   List reviews for user
-
-Database:
-- ratings (id, from_user_id, to_user_id, match_id, stars: 1-5,
-          comment, created_at, updated_at)
-- user_stats (user_id, avg_rating, total_ratings, total_matches, 
-             matches_completed, flag_count, banned_at)
-
-Triggers:
-- After rating created: Update user_stats.avg_rating
-- After 3+ low ratings (<=2 stars): Flag account for review
-- After 5+ low ratings: Shadow ban (hidden from queue)
-
-Internal APIs used:
-- PostgreSQL
+GET    /api/messages/:room_id     история (cursor-based pagination)
+POST   /api/messages/upload       загрузить медиафайл → S3/MinIO
+DELETE /api/messages/:id          soft delete (только свои, 24 ч)
+POST   /api/sessions/:id/end      завершить сессию
 ```
 
-### 5. Notification Service (Shared)
-
+**Схема БД (schema: chat):**
 ```
-Endpoints:
-/notifications/register-token  POST  Register FCM/APNs token
-/notifications/send-test       POST  Send test notification
-/notifications/history         GET   Get notification history
-
-Event Listeners (from RabbitMQ):
-- match.found        → Send "Match found!" push
-- message.received   → Send "New message" push (if in background)
-- session.starting   → Send "Chat starts now" push
-- rating.reminder    → Send "Rate this match" push (after 1h)
-
-Supported channels:
-- FCM (Android)
-- APNs (iOS)
-- Email (Resend)
-- In-app (via WebSocket)
-
-Database:
-- push_tokens (user_id, token, platform: ios/android, created_at)
-- notification_history (user_id, type, payload, sent_at, read_at)
+chat_rooms     (id, user1_id, user2_id, created_at, ended_at, is_active)
+messages       (id, room_id, sender_id, content, attachments[], created_at, deleted_at)
+read_receipts  (message_id, user_id, read_at)
 ```
 
-### 6. WebSocket Service (Port 3005)
-
+**Redis:**
 ```
-Maintains real-time connections using Socket.io
-
-Rooms:
-- /chat/{room_id}          For active chat
-- /queue/{user_id}         For matching updates
-- /notifications           For user notifications
-
-Events (client → server):
-- connect                  WebSocket connected
-- message                  Send message
-- typing                   User is typing
-- read-receipt             Message read
-- disconnect               Cleanup
-
-Events (server → client):
-- partner-status           "online" / "offline"
-- message-received         New message
-- typing-indicator         Partner typing
-- read-receipt             Message read by partner
-- session-ended            Session finished
-
-Internal APIs used:
-- Redis (session store for horizontal scaling)
-- PostgreSQL (persistence)
-- RabbitMQ (event broadcasting)
+room:{room_id}       Pub/Sub канал комнаты
+session:{user_id}    активное WS-соединение (TTL 1 мин, heartbeat)
 ```
 
-## Развёртывание (Docker Compose / Kubernetes)
+---
+
+### Payment Service  (:3004)
+
+Подписки через YooKassa. Основа — tutor2/payment-service.
+
+```
+GET   /api/payments/link         получить ссылку на оплату (YooKassa)
+GET   /api/payments/due_to       дата окончания подписки
+POST  /api/payments/activate     активировать подписку
+POST  /api/payments/deactivate   деaktivировать подписку
+POST  /api/payments/yookassa     webhook от YooKassa
+
+Фоновая задача:
+  Scheduler (из tutor2) — ежедневно 00:00
+  → проверить истёкшие подписки → продлить / деaktivировать
+
+Схема БД (schema: payment):
+  subscriptions  (user_id, status, activated_at, due_to)
+  payments       (id, user_id, amount, yookassa_id, status, created_at)
+```
+
+---
+
+## Инфраструктура
+
+### PostgreSQL
+
+Единый инстанс. Изоляция через схемы — просто, без сложности мульти-DB.
+
+```sql
+CREATE SCHEMA auth;     -- Auth Service
+CREATE SCHEMA core;     -- Core Service
+CREATE SCHEMA chat;     -- Chat Service
+CREATE SCHEMA payment;  -- Payment Service
+```
+
+Каждый сервис подключается с `search_path=<schema>` — видит только свои таблицы.
+
+### Redis
+
+```
+Namespace       Тип           Назначение
+──────────────────────────────────────────────────
+auth:*          String/Set    Blacklist токенов, коды верификации
+ratelimit:*     String        Счётчики rate limit (с TTL)
+match:queue     Sorted Set    Очередь матчмейкинга
+match:{uid}     Pub/Sub       Уведомления о матче
+room:{id}       Pub/Sub       Реальный времени чат
+session:{uid}   String        Heartbeat WS-соединения
+profile:{uid}   String (JSON) Кэш профиля
+```
+
+### S3 / MinIO
+
+Аватарки и медиафайлы в чате. MinIO для self-hosted, S3 для cloud.
+
+```
+Buckets:
+  foray-avatars   — аватарки пользователей (public read)
+  foray-chat      — медиафайлы в чатах (presigned URLs)
+```
+
+---
+
+## Ключевые флоу
+
+### Регистрация
+
+```
+Клиент                     Auth Service
+  │                              │
+  ├─ POST /api/auth/register ───►│
+  │  { email, pwd, nick,         │── bcrypt(pwd) → PostgreSQL
+  │    interests }               │── email_code → Redis (5 мин)
+  │◄─ { status:"verify_email" }──┤── Resend: письмо верификации
+  │                              │
+  ├─ POST /api/auth/verify-email►│
+  │  { code }                    │── code valid → verified=true
+  │◄─ { access_token,            │
+  │     refresh_token }──────────┤
+  │                              │
+  └─ → Core: PUT /api/users/me   (заполнить профиль, загрузить аватар)
+```
+
+### Матчмейкинг
+
+```
+Клиент            Gateway         Core Service          Redis
+  │                  │                 │                   │
+  ├─ POST join ──────►├─── proxy ──────►│                   │
+  │◄─ { queued } ─────┤                 ├─ ZADD queue ──────►│
+  │                   │                 │                   │
+  │  [воркер каждые 5 сек]              │                   │
+  │                   │                 ├─ ZRANGE ──────────►│
+  │                   │                 │◄── [user_a, user_b]─┤
+  │                   │                 ├─ score > 0.5?      │
+  │                   │                 ├─ INSERT match      │
+  │◄── Push: "Нашли!" │                 ├─ PUBLISH match:uid►│
+  │                   │                 │                   │
+  ├─ GET match status►│                 │                   │
+  │◄─ { room_id }──────┤                │                   │
+  │                   │                 │                   │
+  └─── WS /api/ws/chat ─────────────────────────────────────►│
+```
+
+### Чат
+
+```
+User A                  Chat Service                    User B
+  │                          │                             │
+  ├─ WS connect ────────────►│◄──── WS connect ────────────┤
+  │                          ├─ подписка room:{id} (Redis)  │
+  │                          │                             │
+  ├─ { type:"message",       │                             │
+  │    content:"Привет" } ──►│                             │
+  │                          ├─ INSERT messages            │
+  │                          ├─ PUBLISH room:{id} ─────────►│
+  │                          │                   │         │
+  │                          │  User B offline:  │         │
+  │                          ├─ Push notification►         │
+  │                          │                             │
+  │◄── { type:"read" }───────┤◄──── { type:"read" }────────┤
+```
+
+### Завершение сессии и рейтинг
+
+```
+Клиент                     Chat / Core Service
+  │                               │
+  ├─ POST /api/sessions/:id/end ─►│
+  │                               ├─ ended_at = now
+  │                               ├─ PUBLISH room:{id}: session_ended
+  │                               │
+  │◄─ WS: { type:"session_ended"}─┤
+  │                               │
+  │  (UI: Rating Screen)          │
+  ├─ POST /api/ratings ──────────►│
+  │  { match_id, stars, comment } ├─ INSERT ratings
+  │                               ├─ UPDATE user_stats.avg_rating
+  │◄─ { ok } ─────────────────────┤
+```
+
+---
+
+## Развёртывание  (Docker Compose)
 
 ```yaml
 services:
-  # Gateway
-  api-gateway:
-    image: kong:latest
-    ports: [8000:8000]
+  nginx:
+    image: nginx:alpine
+    ports: ["443:443", "80:80"]
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./certs:/certs
+    depends_on: [gateway]
+
+  gateway:
+    build: ./gateway-service
+    environment:
+      AUTH_URL:        http://auth:3001
+      CORE_URL:        http://core:3002
+      CHAT_URL:        http://chat:3003
+      PAYMENT_URL:     http://payment:3004
+      REDIS_URL:       redis://redis:6379
+      JWT_PUBLIC_KEY:  ${JWT_PUBLIC_KEY}
+    depends_on: [redis]
+
+  auth:
+    build: ./auth-service
+    environment:
+      DATABASE_URL:    ${PG_URL}?options=-csearch_path%3Dauth
+      REDIS_URL:       redis://redis:6379
+      JWT_PRIVATE_KEY: ${JWT_PRIVATE_KEY}
+      RESEND_API_KEY:  ${RESEND_API_KEY}
     depends_on: [postgres, redis]
-    
-  # Microservices
-  auth-service:
-    build: ./services/auth
-    ports: [3001:3001]
-    env: [DATABASE_URL, JWT_SECRET, RESEND_API_KEY]
+
+  core:
+    build: ./core-service
+    environment:
+      DATABASE_URL:    ${PG_URL}?options=-csearch_path%3Dcore
+      REDIS_URL:       redis://redis:6379
+      FCM_SERVER_KEY:  ${FCM_SERVER_KEY}
     depends_on: [postgres, redis]
-    
-  messaging-service:
-    build: ./services/messaging
-    ports: [3002:3002]
-    env: [DATABASE_URL, REDIS_URL, ELASTICSEARCH_URL, S3_*]
-    depends_on: [postgres, redis, elasticsearch, minio]
-    
-  matchmaking-service:
-    build: ./services/matchmaking
-    ports: [3003:3003]
-    env: [DATABASE_URL, REDIS_URL, RABBITMQ_URL]
-    depends_on: [postgres, redis, rabbitmq]
-    
-  rating-service:
-    build: ./services/rating
-    ports: [3004:3004]
-    env: [DATABASE_URL]
+
+  chat:
+    build: ./chat-service
+    environment:
+      DATABASE_URL:    ${PG_URL}?options=-csearch_path%3Dchat
+      REDIS_URL:       redis://redis:6379
+      S3_ENDPOINT:     http://minio:9000
+      S3_ACCESS_KEY:   ${MINIO_USER}
+      S3_SECRET_KEY:   ${MINIO_PASSWORD}
+    depends_on: [postgres, redis, minio]
+
+  payment:
+    build: ./payment-service      # tutor2/payment-service
+    environment:
+      DATABASE_URL:           ${PG_URL}?options=-csearch_path%3Dpayment
+      YOOKASSA_SHOP_ID:       ${YOOKASSA_SHOP_ID}
+      YOOKASSA_SECRET_KEY:    ${YOOKASSA_SECRET_KEY}
     depends_on: [postgres]
-    
-  websocket-service:
-    build: ./services/websocket
-    ports: [3005:3005]
-    env: [DATABASE_URL, REDIS_URL, RABBITMQ_URL]
-    depends_on: [postgres, redis, rabbitmq]
-    
-  # Infrastructure
+
   postgres:
-    image: postgres:15
-    environment: [POSTGRES_DB, POSTGRES_PASSWORD]
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB:       foray
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes: [postgres_data:/var/lib/postgresql/data]
-    
+
   redis:
     image: redis:7-alpine
     volumes: [redis_data:/data]
-    
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.0.0
-    environment: [discovery.type=single-node]
-    volumes: [es_data:/usr/share/elasticsearch/data]
-    
-  rabbitmq:
-    image: rabbitmq:3.12-management
-    ports: [5672:5672, 15672:15672]
-    volumes: [rabbitmq_data:/var/lib/rabbitmq]
-    
+
   minio:
     image: minio/minio
-    ports: [9000:9000, 9001:9001]
-    environment: [MINIO_ROOT_USER, MINIO_ROOT_PASSWORD]
-    volumes: [minio_data:/minio_data]
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER:     ${MINIO_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_PASSWORD}
+    volumes: [minio_data:/data]
 
 volumes:
   postgres_data:
   redis_data:
-  es_data:
-  rabbitmq_data:
   minio_data:
 ```
+
+---
+
+## Что берём из tutor2
+
+| Компонент | Источник в tutor2 | Изменения |
+|-----------|------------------|-----------|
+| Gateway | `gateway-service` | Новые роуты, JWT middleware |
+| Auth | `auth-service` | Расширить: interests, avatar |
+| Payment | `payment-service` | Без изменений (YooKassa + Scheduler) |
+| Matchmaking API | `gateway-service/worker_router` | Перенести в Core Service |
+| User API | `gateway-service/users_router` | Адаптировать под Foray |
+| DB pattern | `db-storage-service` | asyncpg + SQLAlchemy (без RabbitMQ) |
+| Push | нет | Новое: FCM/APNs через Core Service |
+| Chat WebSocket | `web-app-service` | Перенести в Chat Service |
+| Rating | нет | Новое в Core Service |
