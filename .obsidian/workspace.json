@@ -88,7 +88,7 @@
               },
               "pinned": true,
               "icon": "terminal",
-              "title": "Terminal: ⠐ Adjust navigation and queue display in graph"
+              "title": "Terminal: ✳ Adjust navigation and queue display in graph"
             }
           },
           {
@@ -106,7 +106,7 @@
             }
           }
         ],
-        "currentTab": 1
+        "currentTab": 2
       }
     ],
     "direction": "vertical"
@@ -271,7 +271,7 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "73d84c48d0d57daa",
+  "active": "6f20660050c568eb",
   "lastOpenFiles": [
     "Foray — Интерфейс и UX.md",
     "Резюме Переработки Архитектуры.md",
