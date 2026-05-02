@@ -106,7 +106,7 @@
             }
           }
         ],
-        "currentTab": 2
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -271,7 +271,7 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "6f20660050c568eb",
+  "active": "73d84c48d0d57daa",
   "lastOpenFiles": [
     "Foray — Интерфейс и UX.md",
     "Резюме Переработки Архитектуры.md",
