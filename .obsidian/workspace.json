@@ -97,12 +97,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "🗺️ Foray — Карта проекта (Обновлено).md",
+                "file": "API Эндпоинты.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "🗺️ Foray — Карта проекта (Обновлено)"
+              "title": "API Эндпоинты"
             }
           }
         ],
@@ -273,11 +273,14 @@
   },
   "active": "6f20660050c568eb",
   "lastOpenFiles": [
+    "🗺️ Foray — Карта проекта (Обновлено).md",
+    "Анализ Backend chat.lllang.site.md",
+    "🗺️ Foray — Карта проекта.md",
+    "Foray — Обзор.md",
+    "Foray — Технический стек.md",
     "Untitled.base",
     "Untitled.canvas",
     "Подписки и Платежи.md",
-    "🗺️ Foray — Карта проекта (Обновлено).md",
-    "🗺️ Foray — Карта проекта.md",
     "Untitled.md",
     "Резюме Переработки Архитектуры.md",
     "Переработанная Архитектура Foray.md",
@@ -289,9 +292,7 @@
     "Жизненный цикл сессии.md",
     "Gateway Сервис.md",
     "API Эндпоинты.md",
-    "Foray — Обзор.md",
     "Словарь.md",
-    "Foray — Технический стек.md",
     "Foray — Аутентификация.md",
     "Аутентификация — Telegram.md",
     "create a link.md",
