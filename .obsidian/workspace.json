@@ -97,12 +97,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Переработанная Архитектура Foray.md",
+                "file": "Резюме Переработки Архитектуры.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Переработанная Архитектура Foray"
+              "title": "Резюме Переработки Архитектуры"
             }
           }
         ],
@@ -273,26 +273,26 @@
   },
   "active": "6f20660050c568eb",
   "lastOpenFiles": [
+    "Жизненный цикл сессии.md",
+    "API Эндпоинты.md",
+    "Матчмейкинг.md",
+    "Переработанная Архитектура Foray.md",
     "🗺️ Foray — Карта проекта.md",
     "Gateway и Микросервисы Мессенджера.md",
     "Foray — Роадмап.md",
     "Gateway Сервис.md",
-    "Матчмейкинг.md",
     "Foray — Технический стек.md",
     "Foray — Обзор.md",
-    "Жизненный цикл сессии.md",
     "Подписки и Платежи.md",
     "Архитектура chat.lllang.site.md",
     "WebSocket Чат.md",
     "Foray — Аутентификация.md",
-    "API Эндпоинты.md",
     "🗺️ Foray — Карта проекта.md",
     "Анализ Backend chat.lllang.site.md",
     "Untitled.base",
     "Untitled.canvas",
     "Untitled.md",
     "Резюме Переработки Архитектуры.md",
-    "Переработанная Архитектура Foray.md",
     "Словарь.md",
     "Аутентификация — Telegram.md",
     "create a link.md",
