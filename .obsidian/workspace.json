@@ -58,6 +58,16 @@
               "icon": "lucide-git-fork",
               "title": "Graph view"
             }
+          },
+          {
+            "id": "9887a6af79d90a9d",
+            "type": "leaf",
+            "state": {
+              "type": "graph",
+              "state": {},
+              "icon": "lucide-git-fork",
+              "title": "Graph view"
+            }
           }
         ]
       }
@@ -226,14 +236,14 @@
   },
   "active": "3eb33dc7b4480c44",
   "lastOpenFiles": [
+    "Подписки и Платежи.md",
+    "Словарь.md",
     "Foray — Роадмап.md",
     "Foray — Технический стек.md",
     "Foray — Аутентификация.md",
     "Foray — Обзор.md",
     "API Эндпоинты.md",
     "Gateway Сервис.md",
-    "Подписки и Платежи.md",
-    "Словарь.md",
     "Жизненный цикл сессии.md",
     "WebSocket Чат.md",
     "Матчмейкинг.md",
