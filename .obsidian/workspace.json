@@ -4,41 +4,59 @@
     "type": "split",
     "children": [
       {
-        "id": "661ad036671898ae",
+        "id": "93337d743166aea1",
         "type": "tabs",
         "children": [
           {
-            "id": "59287fce990d592a",
+            "id": "3eb33dc7b4480c44",
             "type": "leaf",
+            "pinned": true,
             "state": {
-              "type": "markdown",
+              "type": "terminal:terminal",
               "state": {
-                "file": "Welcome.md",
-                "mode": "source",
-                "source": false
+                "terminal:terminal": {
+                  "cwd": "/Users/jebb/Desktop/Obsidian/Foray",
+                  "focus": false,
+                  "profile": {
+                    "args": [
+                      "--login"
+                    ],
+                    "executable": "/bin/zsh",
+                    "followTheme": true,
+                    "name": "",
+                    "platforms": {
+                      "darwin": true
+                    },
+                    "pythonExecutable": "python3",
+                    "restoreHistory": false,
+                    "rightClickAction": "copyPaste",
+                    "successExitCodes": [
+                      "0",
+                      "SIGINT",
+                      "SIGTERM"
+                    ],
+                    "terminalOptions": {
+                      "documentOverride": null
+                    },
+                    "type": "integrated",
+                    "useWin32Conhost": true
+                  },
+                  "serial": null
+                }
               },
-              "icon": "lucide-file",
-              "title": "Welcome"
+              "pinned": true,
+              "icon": "terminal",
+              "title": "Terminal: ✳ Analyze web app chat service logic"
             }
-          }
-        ]
-      },
-      {
-        "id": "fb12c36176d45fbb",
-        "type": "tabs",
-        "children": [
+          },
           {
-            "id": "6661694f0609cc3b",
+            "id": "6f20660050c568eb",
             "type": "leaf",
             "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Welcome.md",
-                "mode": "source",
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "Welcome"
+              "type": "graph",
+              "state": {},
+              "icon": "lucide-git-fork",
+              "title": "Graph view"
             }
           }
         ]
@@ -98,7 +116,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300
+    "width": 200,
+    "collapsed": true
   },
   "right": {
     "id": "3e5553bd92776d26",
@@ -200,11 +219,27 @@
       "daily-notes:Open today's daily note": false,
       "templates:Insert template": false,
       "command-palette:Open command palette": false,
-      "bases:Create new base": false
+      "bases:Create new base": false,
+      "terminal:Open terminal": false,
+      "obsidian-git:Open Git source control": false
     }
   },
-  "active": "6661694f0609cc3b",
+  "active": "3eb33dc7b4480c44",
   "lastOpenFiles": [
+    "Foray — Роадмап.md",
+    "Foray — Технический стек.md",
+    "Foray — Аутентификация.md",
+    "Foray — Обзор.md",
+    "API Эндпоинты.md",
+    "Gateway Сервис.md",
+    "Подписки и Платежи.md",
+    "Словарь.md",
+    "Жизненный цикл сессии.md",
+    "WebSocket Чат.md",
+    "Матчмейкинг.md",
+    "Аутентификация — Telegram.md",
+    "Архитектура chat.lllang.site.md",
+    "🗺️ Foray — Карта проекта.md",
     "create a link.md",
     "Welcome.md"
   ]

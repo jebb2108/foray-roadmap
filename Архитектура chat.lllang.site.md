@@ -1,0 +1,72 @@
+---
+tags: [architecture, existing-system, reference]
+---
+
+# Архитектура chat.lllang.site
+
+← [[🗺️ Foray — Карта проекта]]
+
+## Обзор
+
+`chat.lllang.site` — Telegram Mini App для парных разговорных сессий на английском языке. Реализован как тонкий прокси-слой поверх внутреннего [[Gateway Сервис|Gateway]].
+
+## Технический стек
+
+| Слой | Технология |
+|------|------------|
+| Backend | Python 3.13 + FastAPI + Uvicorn |
+| Frontend | Vanilla HTML/CSS/JS (без фреймворков) |
+| Инфраструктура | Docker Compose (app + Nginx) |
+| Реалтайм | WebSocket (FastAPI native) |
+| Шифрование | Fernet (симметричное) |
+| Email | Resend |
+| Платежи | YooKassa |
+
+## Структура сервиса
+
+```
+web-app-service/
+├── src/
+│   ├── main.py              # Точка входа FastAPI
+│   ├── config.py            # Конфиг через env vars
+│   ├── dependencies.py      # DI: connection service singleton
+│   ├── routers/
+│   │   ├── waiting_room.py  # /api/user/*
+│   │   ├── matchmaking.py   # /api/worker/*
+│   │   ├── websockets.py    # /api/sockets/ws/chat
+│   │   ├── dictionary.py    # /api/dict/*
+│   │   └── payments.py      # /api/payments/webhook/*
+│   ├── services/
+│   │   └── connection.py    # In-memory WebSocket state
+│   └── validators/
+│       └── tokens.py        # JWT create/validate
+└── front/
+    ├── chat/                # Зал ожидания + чат
+    ├── dict/                # Словарь
+    └── main/                # Лендинг + email templates
+```
+
+## Три субдомена
+
+| Субдомен | Назначение |
+|----------|------------|
+| `lllang.site` | Лендинг |
+| `chat.lllang.site` | Зал ожидания + чат (основной продукт) |
+| `dict.lllang.site` | Словарь |
+
+## Ключевые зависимости
+
+- **[[Gateway Сервис]]** — хранит все данные: пользователи, матчи, сообщения, платежи
+- **[[Аутентификация — Telegram]]** — идентификация через Telegram ID
+- **[[Матчмейкинг]]** — алгоритм подбора пар
+- **[[WebSocket Чат]]** — реалтайм коммуникация
+- **[[Словарь]]** — персональный словарный запас
+- **[[Подписки и Платежи]]** — монетизация
+
+## Слабые места (для Foray)
+
+- In-memory WebSocket state → теряется при рестарте
+- Telegram ID как единственный identity provider
+- Секрет JWT (`lambo`) — нужно сменить
+- Нет мобильного нативного опыта
+- Polling каждую секунду для матчмейкинга (неэффективно для мобильных)
