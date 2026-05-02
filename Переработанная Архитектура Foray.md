@@ -17,7 +17,7 @@ Foray — мобильное приложение для поиска едино
 │                          КЛИЕНТ                                  │
 │                  React Native  (iOS + Android)                   │
 │                                                                   │
-│  Экраны:  Auth · Profile · Queue · Chat · Rating · Settings     │
+│  Экраны:  Auth · Profile · Queue · Chat · Settings              │
 │                                                                   │
 │  Токены:  expo-secure-store                                      │
 │  Кэш:     AsyncStorage / MMKV                                    │
@@ -86,7 +86,6 @@ App
     ├── Profile
     │   ├── MyProfile
     │   └── EditProfile
-    ├── Rating       ← появляется после сессии
     └── Settings
         ├── Subscription
         └── Account
@@ -134,7 +133,6 @@ FastAPI (gateway-service)
   /api/auth/*      →  Auth Service    :3001
   /api/users/*     →  Core Service    :3002
   /api/match/*     →  Core Service    :3002
-  /api/ratings/*   →  Core Service    :3002
   /api/messages/*  →  Chat Service    :3003
   /api/ws/*        →  Chat Service    :3003
   /api/payments/*  →  Payment Service :3004
@@ -172,7 +170,7 @@ Redis:
 
 ### Core Service  (:3002)
 
-Профили, матчмейкинг, рейтинги.
+Профили и матчмейкинг.
 
 **Профили:**
 ```
@@ -193,32 +191,18 @@ POST   /api/matches/:id/end   завершить сессию
 Воркер  (asyncio background task, каждые 5 сек):
   1. ZRANGEBYSCORE match:queue → первые N пользователей
   2. Для каждой пары считаем score:
-       interests_sim  = Jaccard(A.interests, B.interests)  × 0.5
-       rating_sim     = 1 − |A.rating − B.rating| / 5      × 0.3
-       wait_bonus     = min(wait_sec / 300, 1.0)            × 0.2
+       interests_sim  = Jaccard(A.interests, B.interests)  × 0.7
+       wait_bonus     = min(wait_sec / 300, 1.0)            × 0.3
   3. Лучшая пара с score > 0.5 → создать match в БД
   4. PUBLISH match:{user_id} для обоих
   5. Push: "Нашли партнёра — подтвердите!"
 ```
 
-**Рейтинги:**
-```
-POST   /api/ratings           оценить партнёра (после сессии)
-GET    /api/ratings/user/:id  оценки пользователя
-
-После оценки:
-  → пересчёт avg_rating в user_stats
-  → ≥ 3 оценок ≤ 2★  → флаг "под проверкой"
-  → ≥ 5 оценок ≤ 2★  → shadow ban (скрытие из очереди)
-```
-
 **Схема БД (schema: core):**
 ```
-profiles     (user_id, nickname, avatar_url, bio, avg_rating, ban_status)
+profiles     (user_id, nickname, avatar_url, bio)
 interests    (user_id, tag)
 matches      (id, user1_id, user2_id, room_id, status, created_at, ended_at)
-ratings      (id, from_user_id, to_user_id, match_id, stars, comment, created_at)
-user_stats   (user_id, total_matches, flag_count, shadow_banned)
 ```
 
 **Redis:**
@@ -402,22 +386,16 @@ User A                  Chat Service                    User B
   │◄── { type:"read" }───────┤◄──── { type:"read" }────────┤
 ```
 
-### Завершение сессии и рейтинг
+### Завершение сессии
 
 ```
-Клиент                     Chat / Core Service
+Клиент                     Chat Service
   │                               │
   ├─ POST /api/sessions/:id/end ─►│
   │                               ├─ ended_at = now
   │                               ├─ PUBLISH room:{id}: session_ended
   │                               │
   │◄─ WS: { type:"session_ended"}─┤
-  │                               │
-  │  (UI: Rating Screen)          │
-  ├─ POST /api/ratings ──────────►│
-  │  { match_id, stars, comment } ├─ INSERT ratings
-  │                               ├─ UPDATE user_stats.avg_rating
-  │◄─ { ok } ─────────────────────┤
 ```
 
 ---
@@ -519,4 +497,3 @@ volumes:
 | DB pattern | `db-storage-service` | asyncpg + SQLAlchemy (без RabbitMQ) |
 | Push | нет | Новое: FCM/APNs через Core Service |
 | Chat WebSocket | `web-app-service` | Перенести в Chat Service |
-| Rating | нет | Новое в Core Service |

@@ -15,7 +15,7 @@ tags: [MOC, foray, overview]
 │              КЛИЕНТ                       │
 │     React Native  (iOS + Android)         │
 │                                           │
-│  Auth · Queue · Chat · Rating · Profile   │
+│  Auth · Queue · Chat · Profile · Settings  │
 └─────────────────┬────────────────────────┘
                   │ HTTPS + WSS
                   ▼
@@ -52,7 +52,7 @@ tags: [MOC, foray, overview]
 |--------|------|----------------|
 | Gateway | :8000 | Роутинг, JWT, rate limit |
 | Auth | :3001 | Регистрация, логин, токены |
-| Core | :3002 | Профили, матчмейкинг, рейтинги |
+| Core | :3002 | Профили, матчмейкинг |
 | Chat | :3003 | WebSocket-чат, история |
 | Payment | :3004 | YooKassa, подписки |
 
@@ -99,9 +99,8 @@ tags: [MOC, foray, overview]
   └─ Загрузка медиафайлов (S3/MinIO)
 
 Фаза 4 — Polish
-  ├─ Рейтинговая система
   ├─ Payment Service (YooKassa)
-  └─ Модерация (shadow ban)
+  └─ Модерация
 
 Фаза 5 — Mobile
   ├─ React Native (Expo)
