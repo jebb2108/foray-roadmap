@@ -46,21 +46,62 @@
               },
               "pinned": true,
               "icon": "terminal",
-              "title": "Terminal: ✳ Analyze web app chat service logic"
+              "title": "Terminal: zsh"
+            }
+          },
+          {
+            "id": "73d84c48d0d57daa",
+            "type": "leaf",
+            "pinned": true,
+            "state": {
+              "type": "terminal:terminal",
+              "state": {
+                "terminal:terminal": {
+                  "cwd": "/Users/jebb/Desktop/Obsidian/Foray",
+                  "focus": false,
+                  "profile": {
+                    "args": [
+                      "--login"
+                    ],
+                    "executable": "/bin/zsh",
+                    "followTheme": true,
+                    "name": "",
+                    "platforms": {
+                      "darwin": true
+                    },
+                    "pythonExecutable": "python3",
+                    "restoreHistory": false,
+                    "rightClickAction": "copyPaste",
+                    "successExitCodes": [
+                      "0",
+                      "SIGINT",
+                      "SIGTERM"
+                    ],
+                    "terminalOptions": {
+                      "documentOverride": null
+                    },
+                    "type": "integrated",
+                    "useWin32Conhost": true
+                  },
+                  "serial": null
+                }
+              },
+              "pinned": true,
+              "icon": "terminal",
+              "title": "Terminal: ⠐ Claude Code"
             }
           },
           {
             "id": "6f20660050c568eb",
             "type": "leaf",
             "state": {
-              "type": "markdown",
+              "type": "bases",
               "state": {
-                "file": "Переработанная Архитектура Foray.md",
-                "mode": "source",
-                "source": false
+                "file": "Untitled.base",
+                "viewName": "View"
               },
-              "icon": "lucide-file",
-              "title": "Переработанная Архитектура Foray"
+              "icon": "lucide-table",
+              "title": "Untitled"
             }
           }
         ],
@@ -229,9 +270,12 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "6f20660050c568eb",
+  "active": "73d84c48d0d57daa",
   "lastOpenFiles": [
+    "Untitled.base",
+    "Untitled.md",
     "Резюме Переработки Архитектуры.md",
+    "Переработанная Архитектура Foray.md",
     "🗺️ Foray — Карта проекта (Обновлено).md",
     "🗺️ Foray — Карта проекта.md",
     "Gateway и Микросервисы Мессенджера.md",
