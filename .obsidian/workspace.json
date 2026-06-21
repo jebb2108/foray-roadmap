@@ -88,17 +88,21 @@
               },
               "pinned": true,
               "icon": "terminal",
-              "title": "Terminal: ✳ Adjust navigation and queue display in graph"
+              "title": "Terminal: zsh"
             }
           },
           {
-            "id": "6f20660050c568eb",
+            "id": "626d38026a9c4441",
             "type": "leaf",
             "state": {
-              "type": "graph",
-              "state": {},
-              "icon": "lucide-git-fork",
-              "title": "Graph view"
+              "type": "markdown",
+              "state": {
+                "file": "API Эндпоинты.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "API Эндпоинты"
             }
           }
         ],
@@ -159,8 +163,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 200,
-    "collapsed": true
+    "width": 200
   },
   "right": {
     "id": "3e5553bd92776d26",
@@ -267,8 +270,10 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "6f20660050c568eb",
+  "active": "626d38026a9c4441",
   "lastOpenFiles": [
+    "Untitled",
+    "Untitled.canvas",
     "Foray — Интерфейс и UX.md",
     "Резюме Переработки Архитектуры.md",
     "Жизненный цикл сессии.md",
@@ -288,7 +293,6 @@
     "🗺️ Foray — Карта проекта.md",
     "Анализ Backend chat.lllang.site.md",
     "Untitled.base",
-    "Untitled.canvas",
     "Untitled.md",
     "Словарь.md",
     "Аутентификация — Telegram.md",
